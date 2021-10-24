@@ -12,7 +12,7 @@ import time
 from torch.utils.data.sampler import RandomSampler
 from models.models import *
 from warmup_scheduler import GradualWarmupScheduler  # https://github.com/ildoonet/pytorch-gradual-warmup-lr
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 class GradualWarmupSchedulerV2(GradualWarmupScheduler):
     def __init__(self, optimizer, multiplier, total_epoch, after_scheduler=None):
@@ -65,7 +65,8 @@ class MelanomaDataset(Dataset):
         if self.mode == 'test':
             return data
         else:
-            return data, torch.tensor(self.csv.iloc[index].target).long()
+            lab = self.csv.iloc[index].target
+            return data, torch.tensor(lab).long()
 
 
 def get_trans(img, I):
@@ -204,14 +205,14 @@ def val_epoch(model, loader, mel_idx, is_ext=None, n_test=1, get_output=False):
 if __name__ == '__main__':
 
     image_size = 512
-    batch_size = 2
+    batch_size = 16
     num_workers = 1
-    enet_type = 'efficientnet'
+    enet_type = 'resnest101'
     n_meta_dim = '512, 128'
     init_lr = 0.001
     n_epochs = 100
     use_meta = True
-    out_dim = 4
+    out_dim = 9
     kernel_type = '9c_meta_b3_768_512_ext_18ep'
     log_dir = './logs'
 
@@ -241,7 +242,7 @@ if __name__ == '__main__':
         enet_type,
         n_meta_features=n_meta_features,
         n_meta_dim=[int(nd) for nd in n_meta_dim.split(',')],
-        out_dim=2,
+        out_dim=out_dim,
         pretrained=False
     )
     device = torch.device('cuda')
